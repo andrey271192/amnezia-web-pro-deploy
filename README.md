@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy
 Скрипт **перед установкой PRO**:
 
 1. **Убирает FREE-панель** из типового `install.sh` (**amnezia_web**): контейнеры `amnezia-admin`, `amnezia-web-landing`, локальные образы `amnezia-admin:latest` / `amnezia-web-landing:latest`, каталог сборки **`/opt/amnezia-admin`**.  
-2. **Не трогает** контейнеры VPN/Wi‑Fi (**amnezia-awg**, **amnezia-awg2** и т.д.).  
+2. **Не трогает** контейнеры VPN (**AmneziaWG / AWG**): **`amnezia-awg`**, **`amnezia-awg2`** и т.п.  
 3. Подставляет **`AWG_CONTAINER`** автоматически, если на сервере уже есть `amnezia-awg` или `amnezia-awg2`.  
 4. Клонирует/обновляет **`/opt/amnezia-web-pro-deploy`**, тянет тег из [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), запрашивает **ключ PAT** (ввод с **`/dev/tty`**).
 
