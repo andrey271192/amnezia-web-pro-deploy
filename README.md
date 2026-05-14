@@ -4,16 +4,26 @@
 
 ## Требования
 
-- VPS с Docker и Docker Compose v2 (`docker compose`)
-- Подписка и значения `GHCR_*` из материалов для подписчиков
+- VPS с **Docker** и **Docker Compose v2** (`docker compose`), **curl**, при первой установке — **git**
+- Активная подписка и **ключ** (GitHub PAT с `read:packages`), см. закрытый пост Boosty
 
-## Быстрый старт
+## Одна ссылка — установка (спросит только ключ)
+
+Скопируйте и выполните на VPS **от root** (или через `sudo`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+```
+
+Скрипт сам возьмёт актуальный тег образа из файла [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), склонирует этот репозиторий в `/opt/amnezia-web-pro-deploy` и попросит ввести **ключ** (персональный токен для `docker pull` с GHCR). Ввод скрыт.
+
+## Ручной способ (git + .env)
 
 ```bash
 git clone https://github.com/andrey271192/amnezia-web-pro-deploy.git
 cd amnezia-web-pro-deploy
 cp .env.example .env
-# заполните GHCR_IMAGE, IMAGE_TAG, GHCR_USERNAME, GHCR_TOKEN (из закрытого поста Boosty)
+# заполните GHCR_* из закрытого поста Boosty
 sudo bash scripts/install.sh
 ```
 

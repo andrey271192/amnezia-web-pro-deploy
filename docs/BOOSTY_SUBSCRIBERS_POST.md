@@ -1,60 +1,53 @@
 # Шаблон закрытого поста Boosty (только для подписчиков)
 
-Скопируйте в Boosty и замените плейсхолдеры.
+Скопируйте в Boosty и подставьте **один** секрет — ключ ниже.
 
 ---
 
 ## Amnezia Admin — Pro (Docker)
 
-Спасибо за поддержку. Исходный код Pro не распространяется — доступ только к готовому образу в GitHub Container Registry.
+Спасибо за поддержку. Исходный код Pro не распространяется — доступ только к приватному образу на GitHub Container Registry.
 
-### 1) Открытая инструкция и файлы
+### Установка одной командой
 
-Репозиторий установки (публичный):  
-https://github.com/andrey271192/amnezia-web-pro-deploy
-
-На VPS (Ubuntu/Debian, установлен Docker):
+На VPS установите Docker и Compose v2, затем выполните **от root**:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y git
-git clone https://github.com/andrey271192/amnezia-web-pro-deploy.git
-cd amnezia-web-pro-deploy
-cp .env.example .env
-nano .env
+sudo apt-get update && sudo apt-get install -y curl git
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-### 2) Заполните `.env` значениями ниже
+Скрипт спросит **ключ доступа** (скрытый ввод). Вставьте ключ из блока ниже и нажмите Enter.
 
-| Переменная | Значение для подписчиков |
-|------------|--------------------------|
-| `GHCR_IMAGE` | `ghcr.io/andrey271192/amnezia-admin-pro` |
-| `IMAGE_TAG` | `v1.0.0` *(или актуальный тег из объявления)* |
-| `GHCR_USERNAME` | **`REPLACE_ME_USERNAME`** |
-| `GHCR_TOKEN` | **`REPLACE_ME_TOKEN`** |
+### Ваш ключ (Personal Access Token для GHCR)
 
-⚠️ Не выкладывайте `.env` и токен в открытый доступ. Не коммитьте их в git.
+```
+REPLACE_ME_PASTE_TOKEN_HERE
+```
 
-### 3) Установка одной командой
+- Логин GitHub для registry уже зашит в установщик (`andrey271192`).
+- Актуальный тег образа скрипт подтягивает сам из репозитория установки (`PRO_IMAGE_TAG`).
+
+⚠️ Не публикуйте ключ в открытых чатах и скриншотах. Не отправляйте его третьим лицам.
+
+### После установки
+
+Панель: `http://ВАШ_IP:8080` (порт при необходимости задаётся переменной `HOST_PORT` до запуска quick-install или правкой `/opt/amnezia-web-pro-deploy/.env`).
+
+Файлы установки: `/opt/amnezia-web-pro-deploy`
+
+### Обновление
 
 ```bash
-sudo bash scripts/install.sh
+sudo bash /opt/amnezia-web-pro-deploy/scripts/update.sh
 ```
 
-Панель: `http://ВАШ_IP:8080` (порт меняется через `HOST_PORT` в `.env`).
+Тег образа подтягивается из публичного файла `PRO_IMAGE_TAG` при следующем запуске quick-install; для **update.sh** при новом релизе при необходимости обновите строку `IMAGE_TAG` в `/opt/amnezia-web-pro-deploy/.env` (или заново выполните `quick-install.sh` — он перезапишет `.env` и запросит ключ снова).
 
-### 4) Обновление до новой версии
+### Если подписка закончилась
 
-В посте при новом релизе будет указан новый `IMAGE_TAG`. В `.env` замените `IMAGE_TAG`, затем:
-
-```bash
-cd amnezia-web-pro-deploy
-sudo bash scripts/update.sh
-```
-
-### 5) Если подписка закончилась
-
-Доступ к закрытым материалам Boosty пропадает; pull-токен может быть отозван при ротации — новые установки и обновления станут недоступны без активной подписки.
+Доступ к закрытому посту пропадает; выданный ключ можно отозвать на стороне GitHub — новые установки и pull образа станут невозможны без нового ключа.
 
 ---
 
-**Поддержка:** напишите автору в личные сообщения на Boosty (вопросы по установке и обновлению).
+**Поддержка:** напишите автору в личные сообщения на Boosty.

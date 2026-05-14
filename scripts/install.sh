@@ -52,6 +52,19 @@ set -a
 source "${ENV_FILE}"
 set +a
 
+# Убираем CR и пробелы по краям (часто после копирования из Boosty/Windows)
+trim_crlf() {
+  local v="$1"
+  v="${v//$'\r'/}"
+  v="${v#"${v%%[![:space:]]*}"}"
+  v="${v%"${v##*[![:space:]]}"}"
+  printf '%s' "$v"
+}
+GHCR_IMAGE="$(trim_crlf "${GHCR_IMAGE:-}")"
+IMAGE_TAG="$(trim_crlf "${IMAGE_TAG:-}")"
+GHCR_USERNAME="$(trim_crlf "${GHCR_USERNAME:-}")"
+GHCR_TOKEN="$(trim_crlf "${GHCR_TOKEN:-}")"
+
 : "${GHCR_IMAGE:?Укажите GHCR_IMAGE в .env}"
 : "${IMAGE_TAG:?Укажите IMAGE_TAG в .env}"
 : "${GHCR_USERNAME:?Укажите GHCR_USERNAME в .env}"
