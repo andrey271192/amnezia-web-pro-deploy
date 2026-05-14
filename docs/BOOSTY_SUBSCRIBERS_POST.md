@@ -26,6 +26,14 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy
 sudo bash /tmp/amnezia-quick-install.sh
 ```
 
+**Порт 8080 занят:** освободите его (`docker ps`, остановите лишний контейнер) или укажите другой порт и повторите установку:
+
+```bash
+HOST_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
+```
+
+Либо правкой `/opt/amnezia-web-pro-deploy/.env` и `cd /opt/amnezia-web-pro-deploy && docker compose up -d`.
+
 ### Ваш ключ (Personal Access Token для GHCR)
 
 ```

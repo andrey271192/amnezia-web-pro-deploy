@@ -81,6 +81,53 @@ if [[ -z "${GHCR_KEY}" ]]; then
   exit 1
 fi
 
+# Порт панели на хосте (8080 часто занят старой установкой amnezia-admin и т.п.)
+tcp_port_in_use() {
+  local port="$1"
+  command -v ss >/dev/null 2>&1 || return 1
+  ss -tln 2>/dev/null | awk -v pt="$port" '$4 ~ ":"pt"$" {found=1} END{exit !found}'
+}
+
+pick_host_port() {
+  # Явный HOST_PORT=… (часто с sudo -E) — не переопределяем.
+  if [[ -n "${HOST_PORT:-}" ]]; then
+    printf '%s' "${HOST_PORT}"
+    return
+  fi
+  local want="8080"
+  if ! tcp_port_in_use "${want}"; then
+    printf '%s' "${want}"
+    return
+  fi
+  echo "⚠ Порт ${want} уже занят на этом сервере (часто это старая панель или другой контейнер)." >&2
+  local alt="8081"
+  if [[ -r /dev/tty ]]; then
+    echo "Введите свободный порт для веб-панели [${alt}]:" >&2
+    IFS= read -r line < /dev/tty || true
+    line="$(trim "${line}")"
+    [[ -z "${line}" ]] && line="${alt}"
+    while tcp_port_in_use "${line}"; do
+      echo "⚠ Порт ${line} тоже занят. Укажите другой:" >&2
+      IFS= read -r line < /dev/tty || true
+      line="$(trim "${line}")"
+      [[ -z "${line}" ]] && {
+        echo "Порт не указан — выход." >&2
+        exit 1
+      }
+    done
+    printf '%s' "${line}"
+    return
+  fi
+  echo "Нет /dev/tty — пробую ${alt}. При необходимости задайте HOST_PORT=… и повторите запуск." >&2
+  if tcp_port_in_use "${alt}"; then
+    echo "И ${alt} занят. Задайте явно: HOST_PORT=9080 curl … | sudo -E bash" >&2
+    exit 1
+  fi
+  printf '%s' "${alt}"
+}
+
+SELECTED_HOST_PORT="$(pick_host_port)"
+
 umask 077
 # %q экранирует $ и прочее — безопасно для «source .env» в install.sh
 {
@@ -88,7 +135,7 @@ umask 077
   printf 'IMAGE_TAG=%q\n' "${IMAGE_TAG}"
   printf 'GHCR_USERNAME=%q\n' "${DEFAULT_GHCR_USERNAME}"
   printf 'GHCR_TOKEN=%q\n' "${GHCR_KEY}"
-  printf 'HOST_PORT=%q\n' "${HOST_PORT:-8080}"
+  printf 'HOST_PORT=%q\n' "${SELECTED_HOST_PORT}"
   printf 'CONTAINER_NAME=%q\n' "${CONTAINER_NAME:-amnezia-admin-pro}"
   printf 'AWG_CONTAINER=%q\n' "${AWG_CONTAINER:-amnezia-awg2}"
 } >"${INSTALL_ROOT}/.env"
