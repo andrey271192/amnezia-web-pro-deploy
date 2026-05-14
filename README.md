@@ -36,6 +36,42 @@ sudo bash /tmp/amnezia-quick-install.sh
 
 **Порт:** если после удаления FREE **8080** всё ещё занят — скрипт предложит другой или задайте `HOST_PORT=8081 curl … | sudo -E bash`.
 
+## Частые проблемы после установки
+
+### `Bind for 0.0.0.0:8080 failed: port is already allocated`
+
+На **8080** уже слушает другой процесс или контейнер (не только снятая FREE-панель). Посмотреть занятость: `ss -tlnp | grep ':8080'`. Обход: переустановка с **`HOST_PORT=8081`** (или свободный порт):
+
+```bash
+HOST_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
+```
+
+### `KeyError: 'ContainerConfig'` и в трассировке указан **`docker-compose` 1.29.x** (`/usr/lib/python3/...`)
+
+Старый **Docker Compose v1** из пакета `docker-compose` **непонимает** образы из GHCR с современным OCI-манифестом без поля **`ContainerConfig`**. Нужна **Compose v2** — команда **`docker compose`** (пакет-плагин).
+
+```bash
+sudo apt-get update
+sudo apt-get install -y docker-compose-plugin
+docker compose version
+```
+
+Затем обновите файлы установки (**на ветке `main` уже запрещён fallback на 1.x**):
+
+```bash
+sudo git -C /opt/amnezia-web-pro-deploy fetch origin main
+sudo git -C /opt/amnezia-web-pro-deploy reset --hard origin/main
+```
+
+Если после неудачного `up` образовался полубитый контейнер:
+
+```bash
+sudo docker rm -f amnezia-admin-pro 2>/dev/null || true
+sudo bash /opt/amnezia-web-pro-deploy/scripts/install.sh
+```
+
+Если файл **`.env` удалён или пуст**, снова запустите **`quick-install.sh`** — он заново попросит PAT.
+
 ## Ручной способ (git + .env)
 
 ```bash
