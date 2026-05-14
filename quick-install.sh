@@ -40,6 +40,26 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
+# Снимаем FREE-панель (amnezia_web / install.sh): контейнеры + локальный образ + каталог сборки.
+# VPN/AWG контейнеры (amnezia-awg, amnezia-awg2 и т.д.) не останавливаем.
+remove_free_amnezia_web_panel() {
+  if [[ "${SKIP_REMOVE_FREE:-}" == "1" ]]; then
+    echo "→ SKIP_REMOVE_FREE=1 — FREE-панель не удаляю."
+    return 0
+  fi
+  echo "→ Удаляю FREE-панель Amnezia Web (освобождаю порт 8080 при необходимости)..."
+  local c
+  for c in amnezia-admin amnezia-web-landing; do
+    docker rm -f "${c}" 2>/dev/null || true
+  done
+  docker rmi -f amnezia-admin:latest 2>/dev/null || true
+  docker rmi -f amnezia-web-landing:latest 2>/dev/null || true
+  rm -rf /opt/amnezia-admin 2>/dev/null || true
+  echo "→ FREE-панель снята (контейнеры WireGuard/AmneziaWG не трогались)."
+}
+
+remove_free_amnezia_web_panel
+
 echo "→ Получаю актуальный тег образа..."
 IMAGE_TAG="$(trim "$(curl -fsSL "${RAW_BASE}/PRO_IMAGE_TAG")")"
 if [[ -z "${IMAGE_TAG}" ]]; then
@@ -126,7 +146,24 @@ pick_host_port() {
   printf '%s' "${alt}"
 }
 
+pick_awg_container_name() {
+  if [[ -n "${AWG_CONTAINER:-}" ]]; then
+    printf '%s' "${AWG_CONTAINER}"
+    return
+  fi
+  if docker inspect amnezia-awg >/dev/null 2>&1; then
+    printf '%s' 'amnezia-awg'
+    return
+  fi
+  if docker inspect amnezia-awg2 >/dev/null 2>&1; then
+    printf '%s' 'amnezia-awg2'
+    return
+  fi
+  printf '%s' 'amnezia-awg2'
+}
+
 SELECTED_HOST_PORT="$(pick_host_port)"
+SELECTED_AWG="$(pick_awg_container_name)"
 
 umask 077
 # %q экранирует $ и прочее — безопасно для «source .env» в install.sh
@@ -137,7 +174,7 @@ umask 077
   printf 'GHCR_TOKEN=%q\n' "${GHCR_KEY}"
   printf 'HOST_PORT=%q\n' "${SELECTED_HOST_PORT}"
   printf 'CONTAINER_NAME=%q\n' "${CONTAINER_NAME:-amnezia-admin-pro}"
-  printf 'AWG_CONTAINER=%q\n' "${AWG_CONTAINER:-amnezia-awg2}"
+  printf 'AWG_CONTAINER=%q\n' "${SELECTED_AWG}"
 } >"${INSTALL_ROOT}/.env"
 
 echo "→ Запуск установки из ${INSTALL_ROOT}"

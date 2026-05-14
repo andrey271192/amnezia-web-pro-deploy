@@ -7,22 +7,31 @@
 - VPS с **Docker** и **Docker Compose v2** (`docker compose`), **curl**, при первой установке — **git**
 - Активная подписка и **ключ** (GitHub PAT с `read:packages`), см. закрытый пост Boosty
 
-## Одна ссылка — установка (спросит только ключ)
+## Одна команда — FREE → PRO (спросит только ключ)
 
-Скопируйте и выполните на VPS **от root** (или через `sudo`):
+На VPS **от root**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-Скрипт сам возьмёт актуальный тег образа из файла [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), склонирует этот репозиторий в `/opt/amnezia-web-pro-deploy` и попросит ввести **ключ** (персональный токен для `docker pull` с GHCR). Ввод скрыт; запрос идёт через **`/dev/tty`**, чтобы работало при конструкции `curl | sudo bash`.
+Скрипт **перед установкой PRO**:
 
-Если на сервере интерактив всё равно недоступен — тот же скрипт файлом:
+1. **Убирает FREE-панель** из типового `install.sh` (**amnezia_web**): контейнеры `amnezia-admin`, `amnezia-web-landing`, локальные образы `amnezia-admin:latest` / `amnezia-web-landing:latest`, каталог сборки **`/opt/amnezia-admin`**.  
+2. **Не трогает** контейнеры VPN/Wi‑Fi (**amnezia-awg**, **amnezia-awg2** и т.д.).  
+3. Подставляет **`AWG_CONTAINER`** автоматически, если на сервере уже есть `amnezia-awg` или `amnezia-awg2`.  
+4. Клонирует/обновляет **`/opt/amnezia-web-pro-deploy`**, тянет тег из [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), запрашивает **ключ PAT** (ввод с **`/dev/tty`**).
+
+Отключить снос FREE (редко нужно): `SKIP_REMOVE_FREE=1 curl … | sudo -E bash`.
+
+Если **нет интерактива** на stdin:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh -o /tmp/amnezia-quick-install.sh
 sudo bash /tmp/amnezia-quick-install.sh
 ```
+
+**Порт:** если после удаления FREE **8080** всё ещё занят — скрипт предложит другой или задайте `HOST_PORT=8081 curl … | sudo -E bash`.
 
 ## Ручной способ (git + .env)
 

@@ -17,7 +17,9 @@ sudo apt-get update && sudo apt-get install -y curl git
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-Скрипт спросит **ключ доступа** (скрытый ввод с клавиатуры). Вставьте ключ из блока ниже и нажмите Enter.
+Установщик **снимает FREE-панель** (типовой `amnezia_web`: контейнеры `amnezia-admin`, лендинг, образы и `/opt/amnezia-admin`). **Контейнер AmneziaWG/VPN не удаляется.** Затем ставится PRO и запрашивается ключ ниже.
+
+Если FREE оставить нельзя по ошибке (редко): `SKIP_REMOVE_FREE=1 curl … | sudo -E bash`.
 
 Если после вставки ключа появляются ошибки — альтернатива (тот же установщик):
 
@@ -26,13 +28,11 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy
 sudo bash /tmp/amnezia-quick-install.sh
 ```
 
-**Порт 8080 занят:** освободите его (`docker ps`, остановите лишний контейнер) или укажите другой порт и повторите установку:
+**Порт 8080 занят не FREE-панелью:** скрипт сам предложит другой порт, либо явно:
 
 ```bash
 HOST_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
 ```
-
-Либо правкой `/opt/amnezia-web-pro-deploy/.env` и `cd /opt/amnezia-web-pro-deploy && docker compose up -d`.
 
 ### Ваш ключ (Personal Access Token для GHCR)
 
