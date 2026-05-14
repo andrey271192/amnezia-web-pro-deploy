@@ -17,7 +17,14 @@ sudo apt-get update && sudo apt-get install -y curl git
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-Скрипт спросит **ключ доступа** (скрытый ввод). Вставьте ключ из блока ниже и нажмите Enter.
+Скрипт спросит **ключ доступа** (скрытый ввод с клавиатуры). Вставьте ключ из блока ниже и нажмите Enter.
+
+Если после вставки ключа появляются ошибки — альтернатива (тот же установщик):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh -o /tmp/amnezia-quick-install.sh
+sudo bash /tmp/amnezia-quick-install.sh
+```
 
 ### Ваш ключ (Personal Access Token для GHCR)
 

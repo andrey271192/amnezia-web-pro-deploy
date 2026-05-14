@@ -15,7 +15,14 @@
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-Скрипт сам возьмёт актуальный тег образа из файла [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), склонирует этот репозиторий в `/opt/amnezia-web-pro-deploy` и попросит ввести **ключ** (персональный токен для `docker pull` с GHCR). Ввод скрыт.
+Скрипт сам возьмёт актуальный тег образа из файла [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), склонирует этот репозиторий в `/opt/amnezia-web-pro-deploy` и попросит ввести **ключ** (персональный токен для `docker pull` с GHCR). Ввод скрыт; запрос идёт через **`/dev/tty`**, чтобы работало при конструкции `curl | sudo bash`.
+
+Если на сервере интерактив всё равно недоступен — тот же скрипт файлом:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh -o /tmp/amnezia-quick-install.sh
+sudo bash /tmp/amnezia-quick-install.sh
+```
 
 ## Ручной способ (git + .env)
 

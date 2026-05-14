@@ -60,9 +60,19 @@ else
 fi
 
 echo ""
-echo "Введите ключ доступа к образу (GitHub PAT с правом read:packages)."
-echo "Ввод скрыт — символы не отображаются."
-read -rs GHCR_KEY
+# При «curl … | sudo bash» stdin — это поток скрипта, а не клавиатура.
+# Читаем ключ с настоящего терминала; иначе read получает EOF и ломает .env.
+if [[ -r /dev/tty ]]; then
+  echo "Введите ключ доступа к образу (GitHub PAT с правом read:packages)."
+  echo "Ввод скрыт — символы не отображаются."
+  IFS= read -rs GHCR_KEY < /dev/tty || true
+else
+  echo "Нет доступа к /dev/tty (интерактивный ввод недоступен)."
+  echo "Скачайте скрипт и запустите файлом:"
+  echo "  curl -fsSL ${RAW_BASE}/quick-install.sh -o /tmp/amnezia-quick-install.sh"
+  echo "  sudo bash /tmp/amnezia-quick-install.sh"
+  exit 1
+fi
 echo ""
 
 GHCR_KEY="$(trim "${GHCR_KEY}")"
@@ -72,15 +82,16 @@ if [[ -z "${GHCR_KEY}" ]]; then
 fi
 
 umask 077
-cat >"${INSTALL_ROOT}/.env" <<EOF
-GHCR_IMAGE=${DEFAULT_GHCR_IMAGE}
-IMAGE_TAG=${IMAGE_TAG}
-GHCR_USERNAME=${DEFAULT_GHCR_USERNAME}
-GHCR_TOKEN=${GHCR_KEY}
-HOST_PORT=${HOST_PORT:-8080}
-CONTAINER_NAME=${CONTAINER_NAME:-amnezia-admin-pro}
-AWG_CONTAINER=${AWG_CONTAINER:-amnezia-awg2}
-EOF
+# %q экранирует $ и прочее — безопасно для «source .env» в install.sh
+{
+  printf 'GHCR_IMAGE=%q\n' "${DEFAULT_GHCR_IMAGE}"
+  printf 'IMAGE_TAG=%q\n' "${IMAGE_TAG}"
+  printf 'GHCR_USERNAME=%q\n' "${DEFAULT_GHCR_USERNAME}"
+  printf 'GHCR_TOKEN=%q\n' "${GHCR_KEY}"
+  printf 'HOST_PORT=%q\n' "${HOST_PORT:-8080}"
+  printf 'CONTAINER_NAME=%q\n' "${CONTAINER_NAME:-amnezia-admin-pro}"
+  printf 'AWG_CONTAINER=%q\n' "${AWG_CONTAINER:-amnezia-awg2}"
+} >"${INSTALL_ROOT}/.env"
 
 echo "→ Запуск установки из ${INSTALL_ROOT}"
 exec bash "${INSTALL_ROOT}/scripts/install.sh"
