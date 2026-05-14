@@ -41,13 +41,16 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 if ! docker compose version >/dev/null 2>&1; then
-  echo "Ошибка: нужен Docker Compose v2 — команда «docker compose»." >&2
-  echo "Старый «docker-compose» 1.x из apt даёт ошибку ContainerConfig на новых образах." >&2
-  echo "" >&2
-  echo "Установите плагин и повторите:" >&2
-  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
-  echo "  docker compose version" >&2
-  exit 1
+  _lib="$(mktemp)"
+  if ! curl -fsSL "${RAW_BASE}/scripts/lib-compose-v2.sh" -o "${_lib}"; then
+    echo "Не удалось скачать вспомогательный файл Compose v2 (${RAW_BASE}/scripts/lib-compose-v2.sh)." >&2
+    rm -f "${_lib}"
+    exit 1
+  fi
+  # shellcheck disable=SC1090
+  source "${_lib}"
+  rm -f "${_lib}"
+  ensure_compose_v2 || exit 1
 fi
 
 # Снимаем FREE-панель (amnezia_web / install.sh): контейнеры + локальный образ + каталог сборки.

@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml"
 ENV_FILE="${ENV_FILE:-${ROOT_DIR}/.env}"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib-compose-v2.sh"
 
 need_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
@@ -24,23 +26,10 @@ need_docker() {
   }
 }
 
-# Не используем legacy docker-compose 1.x (Python): KeyError ContainerConfig на новых образах.
-need_compose_v2() {
-  if docker compose version >/dev/null 2>&1; then
-    COMPOSE=(docker compose)
-    return 0
-  fi
-  echo "Ошибка: нужен Docker Compose v2 — команда «docker compose», не старый «docker-compose» 1.x из apt." >&2
-  echo "" >&2
-  echo "Установка плагина (Ubuntu/Debian):" >&2
-  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
-  echo "Проверка: docker compose version" >&2
-  exit 1
-}
-
 need_root
 need_docker
-need_compose_v2
+ensure_compose_v2 || exit 1
+COMPOSE=(docker compose)
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "Создайте файл .env из .env.example и вставьте GHCR_* из закрытого поста Boosty:"

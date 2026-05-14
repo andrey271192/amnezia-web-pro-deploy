@@ -3,19 +3,16 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-${ROOT_DIR}/.env}"
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib-compose-v2.sh"
 
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   echo "Запустите от root."
   exit 1
 fi
 
-if docker compose version >/dev/null 2>&1; then
-  COMPOSE=(docker compose)
-else
-  echo "Ошибка: нужен Docker Compose v2 («docker compose»). Старый docker-compose 1.x не поддерживается." >&2
-  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
-  exit 1
-fi
+ensure_compose_v2 || exit 1
+COMPOSE=(docker compose)
 
 set -a
 # shellcheck disable=SC1090
