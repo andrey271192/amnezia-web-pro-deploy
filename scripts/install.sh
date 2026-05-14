@@ -24,22 +24,23 @@ need_docker() {
   }
 }
 
-need_compose() {
+# Не используем legacy docker-compose 1.x (Python): KeyError ContainerConfig на новых образах.
+need_compose_v2() {
   if docker compose version >/dev/null 2>&1; then
     COMPOSE=(docker compose)
-    return
+    return 0
   fi
-  if command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE=(docker-compose)
-    return
-  fi
-  echo "Нужен Docker Compose v2 (docker compose)."
+  echo "Ошибка: нужен Docker Compose v2 — команда «docker compose», не старый «docker-compose» 1.x из apt." >&2
+  echo "" >&2
+  echo "Установка плагина (Ubuntu/Debian):" >&2
+  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
+  echo "Проверка: docker compose version" >&2
   exit 1
 }
 
 need_root
 need_docker
-need_compose
+need_compose_v2
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "Создайте файл .env из .env.example и вставьте GHCR_* из закрытого поста Boosty:"

@@ -4,7 +4,10 @@
 
 ## Требования
 
-- VPS с **Docker** и **Docker Compose v2** (`docker compose`), **curl**, при первой установке — **git**
+- VPS с **Docker** и **Docker Compose v2** — команда **`docker compose`** (плагин `docker-compose-plugin`).  
+  **Не подходит** старый **`docker-compose`** 1.x из Ubuntu — на новых образах будет ошибка **`ContainerConfig` / KeyError**.
+- Установка плагина: `sudo apt-get update && sudo apt-get install -y docker-compose-plugin`
+- Также нужны **curl** и при первой установке — **git**
 - Активная подписка и **ключ** (GitHub PAT с `read:packages`), см. закрытый пост Boosty
 
 ## Одна команда — FREE → PRO (спросит только ключ)

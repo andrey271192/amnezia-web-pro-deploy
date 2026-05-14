@@ -40,6 +40,16 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! docker compose version >/dev/null 2>&1; then
+  echo "Ошибка: нужен Docker Compose v2 — команда «docker compose»." >&2
+  echo "Старый «docker-compose» 1.x из apt даёт ошибку ContainerConfig на новых образах." >&2
+  echo "" >&2
+  echo "Установите плагин и повторите:" >&2
+  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
+  echo "  docker compose version" >&2
+  exit 1
+fi
+
 # Снимаем FREE-панель (amnezia_web / install.sh): контейнеры + локальный образ + каталог сборки.
 # VPN/AWG контейнеры (amnezia-awg, amnezia-awg2 и т.д.) не останавливаем.
 remove_free_amnezia_web_panel() {

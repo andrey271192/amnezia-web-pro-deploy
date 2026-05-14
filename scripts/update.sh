@@ -11,10 +11,9 @@ fi
 
 if docker compose version >/dev/null 2>&1; then
   COMPOSE=(docker compose)
-elif command -v docker-compose >/dev/null 2>&1; then
-  COMPOSE=(docker-compose)
 else
-  echo "Нужен docker compose."
+  echo "Ошибка: нужен Docker Compose v2 («docker compose»). Старый docker-compose 1.x не поддерживается." >&2
+  echo "  sudo apt-get update && sudo apt-get install -y docker-compose-plugin" >&2
   exit 1
 fi
 

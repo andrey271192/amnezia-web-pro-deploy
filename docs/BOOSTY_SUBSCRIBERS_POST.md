@@ -13,9 +13,12 @@
 На VPS установите Docker и Compose v2, затем выполните **от root**:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y curl git
+sudo apt-get update && sudo apt-get install -y curl git docker-compose-plugin
+docker compose version
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
+
+Нужен именно **`docker compose`** (плагин v2). Старый пакет **`docker-compose`** 1.x из Ubuntu ломает установку (**ContainerConfig**).
 
 Установщик **снимает FREE-панель** (типовой `amnezia_web`: контейнеры `amnezia-admin`, лендинг, образы и `/opt/amnezia-admin`). **Контейнер AmneziaWG/VPN не удаляется.** Затем ставится PRO и запрашивается ключ ниже.
 
