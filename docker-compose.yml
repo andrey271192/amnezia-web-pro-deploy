@@ -1,0 +1,25 @@
+services:
+  panel:
+    image: ${GHCR_IMAGE}:${IMAGE_TAG}
+    container_name: ${CONTAINER_NAME:-amnezia-admin-pro}
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8080}:3980"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - amnezia-admin-pro-data:/data
+    environment:
+      AWG_CONTAINER: ${AWG_CONTAINER:-amnezia-awg2}
+      TZ: ${TZ:-}
+      AWG_PROFILES: ${AWG_PROFILES:-}
+      TIME_SYNC_SSH_HOST: ${TIME_SYNC_SSH_HOST:-}
+      TIME_SYNC_DISABLED: ${TIME_SYNC_DISABLED:-}
+      WARP_DIR: ${WARP_DIR:-}
+      WARP_CONF_PATH: ${WARP_CONF_PATH:-}
+      WARP_CLIENTS_LIST: ${WARP_CLIENTS_LIST:-}
+      AMNEZIA_START_SCRIPT: ${AMNEZIA_START_SCRIPT:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ALLOW_DEFAULT_PASSWORD: ${ALLOW_DEFAULT_PASSWORD:-}
+
+volumes:
+  amnezia-admin-pro-data:
