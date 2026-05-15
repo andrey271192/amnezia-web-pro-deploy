@@ -108,23 +108,6 @@ cp .env.example .env
 sudo bash scripts/install.sh
 ```
 
-## Публикация на GitHub (для автора)
-
-1. Создайте на GitHub новый репозиторий **`amnezia-web-pro-deploy`**, тип **Public** (без автогенерации README, если заливаете уже готовые файлы).
-2. В каталоге с этим проектом:
-
-```bash
-cd amnezia-web-pro-deploy
-git init
-git add -A
-git commit -m "Initial public deploy bundle"
-git branch -M main
-git remote add origin https://github.com/andrey271192/amnezia-web-pro-deploy.git
-git push -u origin main
-```
-
-Если GitHub при создании репозитория уже добавил коммит — сделайте `git pull origin main --allow-unrelated-histories`, затем push.
-
 ## Обновление
 
 После объявления нового тега образа обновите `IMAGE_TAG` в `.env` и выполните:
