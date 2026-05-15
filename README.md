@@ -12,6 +12,16 @@
 - Нужны **curl** и при первой установке — **git**
 - Подписка и **ключ** (GitHub PAT с `read:packages`), см. закрытый пост Boosty
 
+## Скриншоты интерфейса PRO
+
+После установки в браузере открывается та же админ-панель, что и в исходниках **amnezia_web-PRO** (при актуальном образе на GHCR):
+
+<p align="center">
+<img src="docs/screenshots/panel-users-table.png" alt="Панель: пользователи AmneziaWG, инстансы, время, статусы" width="780"/>
+<br/><br/>
+<img src="docs/screenshots/panel-overview-password.png" alt="Панель: заголовок, форма смены пароля" width="780"/>
+</p>
+
 ## Одна команда — FREE → PRO (спросит только ключ)
 
 На VPS **от root**:
