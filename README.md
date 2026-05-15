@@ -1,6 +1,17 @@
 # Amnezia Admin Pro — установка (Docker / GHCR)
 
-Публичный репозиторий **только с инструкциями и compose**. Сам образ приложения — **приватный** на GitHub Container Registry; учётные данные для `docker pull` выдаются **активным подписчикам** (например, в закрытом посте на Boosty).
+> Где поддержать: [Boosty (донат)](https://boosty.to/andrey27/donate) · [Ozon СБП](https://finance.ozon.ru/apps/sbp/ozonbankpay/019dc200-2a5d-7931-a619-782d285f6798) · [Telegram @lot_andrey](https://t.me/lot_andrey) · [**Этот репозиторий на GitHub** ↗](https://github.com/andrey271192/amnezia-web-pro-deploy)
+
+## Поддержка проекта
+
+---
+
+- ⭐ **GitHub:** [andrey271192/amnezia-web-pro-deploy](https://github.com/andrey271192/amnezia-web-pro-deploy)
+- 💖 **Boosty:** [boosty.to/andrey27/donate](https://boosty.to/andrey27/donate)
+- 💳 **Ozon Bank (СБП):** [ссылка](https://finance.ozon.ru/apps/sbp/ozonbankpay/019dc200-2a5d-7931-a619-782d285f6798)
+- ✉️ **Telegram:** [@lot_andrey](https://t.me/lot_andrey)
+
+Публичный репозиторий **только с инструкциями и compose**. Код базовой панели — [amnezia_web](https://github.com/andrey271192/amnezia_web), полная **PRO** — приватный репозиторий [amnezia_web-PRO](https://github.com/andrey271192/amnezia_web-PRO). Сам образ приложения — **приватный** на GitHub Container Registry; учётные данные для `docker pull` выдаются **активным подписчикам** (например, в закрытом посте на Boosty).
 
 ## Требования
 

@@ -1,5 +1,14 @@
 # Шаблон закрытого поста Boosty (только для подписчиков)
 
+## Поддержка проекта
+
+---
+
+- ⭐ **GitHub:** [andrey271192/amnezia-web-pro-deploy](https://github.com/andrey271192/amnezia-web-pro-deploy)
+- 💖 **Boosty:** [boosty.to/andrey27/donate](https://boosty.to/andrey27/donate)
+- 💳 **Ozon Bank (СБП):** [ссылка](https://finance.ozon.ru/apps/sbp/ozonbankpay/019dc200-2a5d-7931-a619-782d285f6798)
+- ✉️ **Telegram:** [@lot_andrey](https://t.me/lot_andrey)
+
 Скопируйте в Boosty и подставьте **один** секрет — ключ ниже.
 
 ---
