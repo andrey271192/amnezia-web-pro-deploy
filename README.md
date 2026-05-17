@@ -1,18 +1,19 @@
 # Amnezia Admin Pro — установка (Docker / GHCR)
 
-## Требования
+Скрипты, которые снимают FREE-панель [amnezia_web](https://github.com/andrey271192/amnezia_web) и поднимают PRO-образ с GitHub Container Registry. VPN-контейнеры (**`amnezia-awg`**, **`amnezia-awg2`**) не трогаем.
 
-- VPS с установленным **Docker** и запущенным демоном.
-- Командная строка должна понимать **`docker compose`** (Compose v2).  
-  Если пакета **`docker-compose-plugin`** нет в ваших APT‑репозиториях, **`quick-install.sh`** по умолчанию **скачивает официальный CLI‑плагин** Compose v2 с GitHub Releases в **`/usr/local/lib/docker/cli-plugins/`** (переменные **`COMPOSE_CLI_VERSION`** / **`DISABLE_STANDALONE_COMPOSE_DOWNLOAD=1`** — см. `scripts/lib-compose-v2.sh`).
-- Альтернатива: добавить **[репозиторий Docker CE](https://docs.docker.com/engine/install/ubuntu/)** и поставить **`docker-compose-plugin`** из apt.
-- **Не использовать** одноимённый устаревший **`docker-compose` 1.x** (Python): на образах GHCR будет **`ContainerConfig` / KeyError**.
-- Нужны **curl** и при первой установке — **git**
-- Подписка и **ключ** (GitHub PAT с `read:packages`), см. закрытый пост Boosty
+## Что понадобится на VPS
 
-## Скриншоты интерфейса PRO
+- **Docker** и работающий демон.
+- **`docker compose`** v2 (не старый `docker-compose` 1.x — будет `ContainerConfig` / KeyError).
+- **curl**, при первой установке — **git**.
+- **Ключ** с Boosty: GitHub PAT с `read:packages` (не светите в чатах и на скринах).
 
-После установки в браузере открывается та же админ-панель, что и в исходниках **amnezia_web-PRO** (при актуальном образе на GHCR):
+`quick-install.sh` сам подтянет Compose v2, если в apt его нет (`scripts/lib-compose-v2.sh`).
+
+## Как выглядит PRO
+
+После установки — та же панель, что в **amnezia_web-PRO**:
 
 <p align="center">
 <img src="docs/screenshots/panel-users-table.png" alt="Панель: пользователи AmneziaWG, инстансы, время, статусы" width="780"/>
