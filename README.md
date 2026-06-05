@@ -1,13 +1,14 @@
 # Amnezia Web PRO Deploy
 
-Публичный установщик для **Amnezia Web PRO** на VPS. Репозиторий нужен, чтобы пользователи ставили панель одной командой без доступа к private GHCR image и без ошибки `403 Forbidden`.
+Приватный установщик **Amnezia Web PRO** на VPS. Доступ к репозиториям выдаётся подписчикам Boosty.
 
-По умолчанию установка идёт из открытого source repo:
+По умолчанию установка идёт из private source repo:
 
-- source: [`andrey271192/amnezia_web-PRO_test`](https://github.com/andrey271192/amnezia_web-PRO_test);
+- source: `andrey271192/amnezia_web-PRO_test`;
 - текущий релиз: `v1.5.2`;
 - old GHCR image больше не используется по умолчанию;
 - legacy GHCR mode оставлен только вручную через `USE_GHCR=1`.
+- нужен `GITHUB_TOKEN` с доступом к private repo.
 
 ## Что делает установщик
 
@@ -17,21 +18,28 @@
 - создаёт `.env`;
 - собирает и запускает Docker Compose stack;
 - поддерживает явный первый пароль admin через `ADMIN_PASSWORD`;
-- не требует GHCR PAT для обычной установки.
+- не требует GHCR PAT для обычной установки;
+- требует GitHub token для доступа к private source.
 
 ## Быстрая установка
 
 На VPS от root:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo -E bash
 ```
 
 То же самое с явным первым паролем admin:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
-  | sudo ADMIN_PASSWORD='СЛОЖНЫЙ_ПАРОЛЬ' bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+export ADMIN_PASSWORD='СЛОЖНЫЙ_ПАРОЛЬ'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo -E bash
 ```
 
 `quick-install.sh` скачает и запустит рабочий установщик:
@@ -39,6 +47,8 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy
 ```bash
 https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh
 ```
+
+Если `GITHUB_TOKEN` не передан, private GitHub вернёт `404` или `403`. Это нормально: repo закрыт.
 
 ## Почему больше не GHCR
 
@@ -54,7 +64,7 @@ ghcr.io/andrey271192/amnezia-admin-pro:v1.0.0
 unexpected status ... 403 Forbidden
 ```
 
-Это не ошибка VPS и не ошибка Docker. Это отказ GitHub Container Registry. Чтобы не ловить эту ошибку у подписчиков, обычная установка теперь идёт из GitHub source.
+Это не ошибка VPS и не ошибка Docker. Это отказ GitHub Container Registry. Чтобы не ловить эту ошибку у подписчиков, обычная установка теперь идёт из private GitHub source.
 
 Предупреждение Docker:
 
@@ -69,7 +79,10 @@ WARNING! Your credentials are stored unencrypted in '/root/.docker/config.json'
 Оставлен только для ручного использования, если у вас реально есть доступ к package:
 
 ```bash
-USE_GHCR=1 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+USE_GHCR=1 curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo -E bash
 ```
 
 или:
@@ -90,10 +103,13 @@ USE_GHCR=1 sudo -E bash scripts/install.sh
 
 Причина: старый GHCR-сценарий пытается скачать private image, а у token нет доступа к package.
 
-Решение: используйте обычную установку без GHCR:
+Решение: используйте обычную private source установку без GHCR:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo -E bash
 ```
 
 ### `Login Succeeded`, но pull всё равно падает
@@ -135,7 +151,11 @@ docker compose version
 Укажите другой порт при установке основного проекта:
 
 ```bash
-NGINX_HTTP_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh | sudo -E bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+export NGINX_HTTP_PORT=8081
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh \
+  | sudo -E bash
 ```
 
 ### Не входит в панель после переустановки
@@ -143,8 +163,11 @@ NGINX_HTTP_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/a
 Задайте новый пароль admin явно:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh \
-  | sudo ADMIN_PASSWORD='НОВЫЙ_ПАРОЛЬ' bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+export ADMIN_PASSWORD='НОВЫЙ_ПАРОЛЬ'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh \
+  | sudo -E bash
 ```
 
 ### Нужна полная переустановка
@@ -152,9 +175,13 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/m
 Удалите панель с данными и поставьте заново:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
   | sudo REMOVE_DATA=1 REMOVE_DIR=1 bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo -E bash
 ```
 
 ## Удаление
@@ -162,13 +189,18 @@ curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy
 Обычная остановка панели:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh | sudo bash
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
+  | sudo -E bash
 ```
 
 Полная очистка с данными:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
+export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
+curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
   | sudo REMOVE_DATA=1 REMOVE_DIR=1 bash
 ```
 

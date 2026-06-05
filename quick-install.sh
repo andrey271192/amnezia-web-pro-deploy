@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# One-command installer kept for old links. Default path now installs from the
-# open source repo, not the private GHCR image, so subscribers do not hit 403.
+# One-command installer kept for subscriber links. Default path installs from
+# the private source repo using GITHUB_TOKEN, not the legacy GHCR image.
 set -euo pipefail
 
 RAW_BASE="${RAW_BASE:-https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main}"
@@ -8,7 +8,8 @@ SOURCE_INSTALL_URL="${SOURCE_INSTALL_URL:-https://raw.githubusercontent.com/andr
 
 need_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
-    echo "Запустите: curl -fsSL ${RAW_BASE}/quick-install.sh | sudo bash"
+    echo "Запустите с GITHUB_TOKEN:"
+    echo "curl -fsSL -H \"Authorization: Bearer \${GITHUB_TOKEN}\" ${RAW_BASE}/quick-install.sh | sudo -E bash"
     exit 1
   fi
 }
@@ -20,17 +21,29 @@ need_cmd() {
   }
 }
 
+curl_auth_args() {
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    printf '%s\n' -H "Authorization: Bearer ${GITHUB_TOKEN}"
+  fi
+}
+
 need_root
 need_cmd curl
 
 if [[ "${USE_GHCR:-0}" != "1" ]]; then
   echo "→ GHCR-установка отключена: старый private image часто даёт 403 Forbidden."
-  echo "→ Ставлю Amnezia Web PRO из GitHub: ${SOURCE_INSTALL_URL}"
+  echo "→ Ставлю Amnezia Web PRO из private GitHub source: ${SOURCE_INSTALL_URL}"
   echo "→ Для старого GHCR-сценария запустите: USE_GHCR=1 curl ... | sudo -E bash"
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    echo "Нужен GITHUB_TOKEN с доступом к private repo andrey271192/amnezia_web-PRO_test."
+    echo "Пример: export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'"
+    exit 1
+  fi
   echo ""
   tmp="$(mktemp)"
   trap 'rm -f "$tmp"' EXIT
-  curl -fsSL "${SOURCE_INSTALL_URL}" -o "$tmp"
+  mapfile -t _curl_auth < <(curl_auth_args)
+  curl -fsSL "${_curl_auth[@]}" "${SOURCE_INSTALL_URL}" -o "$tmp"
   exec bash "$tmp"
 fi
 
@@ -57,7 +70,8 @@ trim() {
 
 if ! docker compose version >/dev/null 2>&1; then
   _lib="$(mktemp)"
-  if ! curl -fsSL "${RAW_BASE}/scripts/lib-compose-v2.sh" -o "${_lib}"; then
+  mapfile -t _curl_auth < <(curl_auth_args)
+  if ! curl -fsSL "${_curl_auth[@]}" "${RAW_BASE}/scripts/lib-compose-v2.sh" -o "${_lib}"; then
     echo "Не удалось скачать вспомогательный файл Compose v2 (${RAW_BASE}/scripts/lib-compose-v2.sh)." >&2
     rm -f "${_lib}"
     exit 1
@@ -87,7 +101,8 @@ remove_free_amnezia_web_panel() {
 remove_free_amnezia_web_panel
 
 echo "→ Получаю актуальный тег образа..."
-IMAGE_TAG="$(trim "$(curl -fsSL "${RAW_BASE}/PRO_IMAGE_TAG")")"
+mapfile -t _curl_auth < <(curl_auth_args)
+IMAGE_TAG="$(trim "$(curl -fsSL "${_curl_auth[@]}" "${RAW_BASE}/PRO_IMAGE_TAG")")"
 if [[ -z "${IMAGE_TAG}" ]]; then
   echo "Не удалось прочитать PRO_IMAGE_TAG с GitHub."
   exit 1
