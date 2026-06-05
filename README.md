@@ -1,10 +1,23 @@
-# Amnezia Web PRO — установка
+# Amnezia Web PRO Deploy
 
-Публичный установщик для **Amnezia Web PRO**. По умолчанию ставит панель из открытого GitHub repo:
+Публичный установщик для **Amnezia Web PRO** на VPS. Репозиторий нужен, чтобы пользователи ставили панель одной командой без доступа к private GHCR image и без ошибки `403 Forbidden`.
 
-- source: [`andrey271192/amnezia_web-PRO_test`](https://github.com/andrey271192/amnezia_web-PRO_test)
-- текущий релиз: `v1.5.2`
-- old GHCR image больше не используется по умолчанию, чтобы у пользователей не было `403 Forbidden`.
+По умолчанию установка идёт из открытого source repo:
+
+- source: [`andrey271192/amnezia_web-PRO_test`](https://github.com/andrey271192/amnezia_web-PRO_test);
+- текущий релиз: `v1.5.2`;
+- old GHCR image больше не используется по умолчанию;
+- legacy GHCR mode оставлен только вручную через `USE_GHCR=1`.
+
+## Что делает установщик
+
+- скачивает актуальный `install.sh` из `amnezia_web-PRO_test`;
+- ставит Docker, если его нет;
+- разворачивает панель в `/opt/amnezia-web-pro`;
+- создаёт `.env`;
+- собирает и запускает Docker Compose stack;
+- поддерживает явный первый пароль admin через `ADMIN_PASSWORD`;
+- не требует GHCR PAT для обычной установки.
 
 ## Быстрая установка
 
@@ -70,6 +83,79 @@ USE_GHCR=1 sudo -E bash scripts/install.sh
 - GitHub PAT с `read:packages`;
 - доступ к package `ghcr.io/andrey271192/amnezia-admin-pro`;
 - существующий tag из `PRO_IMAGE_TAG`.
+
+## Проблемы и решения
+
+### `403 Forbidden` при `docker pull ghcr.io/...`
+
+Причина: старый GHCR-сценарий пытается скачать private image, а у token нет доступа к package.
+
+Решение: используйте обычную установку без GHCR:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+```
+
+### `Login Succeeded`, но pull всё равно падает
+
+`docker login` проверяет только логин/token. Он не гарантирует доступ к конкретному package.
+
+Решение: не используйте GHCR-режим. Если GHCR всё-таки нужен, проверьте:
+
+- PAT имеет `read:packages`;
+- GitHub account имеет доступ к package;
+- package не private для этого пользователя;
+- tag из `PRO_IMAGE_TAG` реально опубликован.
+
+### `WARNING! Your credentials are stored unencrypted`
+
+Это предупреждение Docker, не ошибка установки. Оно не вызывает `403 Forbidden`.
+
+### `Docker daemon недоступен`
+
+Docker установлен, но сервис не запущен.
+
+```bash
+sudo systemctl enable --now docker
+docker info
+```
+
+### `docker compose` не найден
+
+Обычный source installer сам ставит Docker Compose plugin. Если запускаете legacy GHCR mode вручную, обновите Docker/Compose:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y docker-compose-plugin
+docker compose version
+```
+
+### Порт панели занят
+
+Укажите другой порт при установке основного проекта:
+
+```bash
+NGINX_HTTP_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh | sudo -E bash
+```
+
+### Не входит в панель после переустановки
+
+Задайте новый пароль admin явно:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh \
+  | sudo ADMIN_PASSWORD='НОВЫЙ_ПАРОЛЬ' bash
+```
+
+### Нужна полная переустановка
+
+Удалите панель с данными и поставьте заново:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
+  | sudo REMOVE_DATA=1 REMOVE_DIR=1 bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+```
 
 ## Удаление
 
