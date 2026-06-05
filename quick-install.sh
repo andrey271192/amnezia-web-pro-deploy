@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# Одна команда: curl … | sudo bash — спросит только ключ (PAT для ghcr.io).
+# One-command installer kept for old links. Default path now installs from the
+# open source repo, not the private GHCR image, so subscribers do not hit 403.
 set -euo pipefail
 
-DEPLOY_REPO="${DEPLOY_REPO:-https://github.com/andrey271192/amnezia-web-pro-deploy.git}"
 RAW_BASE="${RAW_BASE:-https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main}"
-INSTALL_ROOT="${INSTALL_ROOT:-/opt/amnezia-web-pro-deploy}"
-
-DEFAULT_GHCR_IMAGE="${DEFAULT_GHCR_IMAGE:-ghcr.io/andrey271192/amnezia-admin-pro}"
-DEFAULT_GHCR_USERNAME="${DEFAULT_GHCR_USERNAME:-andrey271192}"
+SOURCE_INSTALL_URL="${SOURCE_INSTALL_URL:-https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh}"
 
 need_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
@@ -18,10 +15,37 @@ need_root() {
 
 need_cmd() {
   command -v "$1" >/dev/null 2>&1 || {
-    echo "Нужна утилита: $1 (например: apt-get install -y $1)"
+    echo "Нужна утилита: $1"
     exit 1
   }
 }
+
+need_root
+need_cmd curl
+
+if [[ "${USE_GHCR:-0}" != "1" ]]; then
+  echo "→ GHCR-установка отключена: старый private image часто даёт 403 Forbidden."
+  echo "→ Ставлю Amnezia Web PRO из GitHub: ${SOURCE_INSTALL_URL}"
+  echo "→ Для старого GHCR-сценария запустите: USE_GHCR=1 curl ... | sudo -E bash"
+  echo ""
+  tmp="$(mktemp)"
+  trap 'rm -f "$tmp"' EXIT
+  curl -fsSL "${SOURCE_INSTALL_URL}" -o "$tmp"
+  exec bash "$tmp"
+fi
+
+DEPLOY_REPO="${DEPLOY_REPO:-https://github.com/andrey271192/amnezia-web-pro-deploy.git}"
+INSTALL_ROOT="${INSTALL_ROOT:-/opt/amnezia-web-pro-deploy}"
+
+DEFAULT_GHCR_IMAGE="${DEFAULT_GHCR_IMAGE:-ghcr.io/andrey271192/amnezia-admin-pro}"
+DEFAULT_GHCR_USERNAME="${DEFAULT_GHCR_USERNAME:-andrey271192}"
+
+need_cmd docker
+
+if ! docker info >/dev/null 2>&1; then
+  echo "Docker daemon недоступен. Запустите Docker и повторите."
+  exit 1
+fi
 
 trim() {
   local v="$1"
@@ -30,15 +54,6 @@ trim() {
   v="${v%"${v##*[![:space:]]}"}"
   printf '%s' "$v"
 }
-
-need_root
-need_cmd curl
-need_cmd docker
-
-if ! docker info >/dev/null 2>&1; then
-  echo "Docker daemon недоступен. Запустите Docker и повторите."
-  exit 1
-fi
 
 if ! docker compose version >/dev/null 2>&1; then
   _lib="$(mktemp)"
@@ -53,8 +68,6 @@ if ! docker compose version >/dev/null 2>&1; then
   ensure_compose_v2 || exit 1
 fi
 
-# Снимаем FREE-панель (amnezia_web / install.sh): контейнеры + локальный образ + каталог сборки.
-# VPN/AWG контейнеры (amnezia-awg, amnezia-awg2 и т.д.) не останавливаем.
 remove_free_amnezia_web_panel() {
   if [[ "${SKIP_REMOVE_FREE:-}" == "1" ]]; then
     echo "→ SKIP_REMOVE_FREE=1 — FREE-панель не удаляю."
@@ -93,17 +106,12 @@ else
 fi
 
 echo ""
-# При «curl … | sudo bash» stdin — это поток скрипта, а не клавиатура.
-# Читаем ключ с настоящего терминала; иначе read получает EOF и ломает .env.
+echo "Введите ключ доступа к образу (GitHub PAT с правом read:packages)."
+echo "Ввод скрыт — символы не отображаются."
 if [[ -r /dev/tty ]]; then
-  echo "Введите ключ доступа к образу (GitHub PAT с правом read:packages)."
-  echo "Ввод скрыт — символы не отображаются."
   IFS= read -rs GHCR_KEY < /dev/tty || true
 else
-  echo "Нет доступа к /dev/tty (интерактивный ввод недоступен)."
-  echo "Скачайте скрипт и запустите файлом:"
-  echo "  curl -fsSL ${RAW_BASE}/quick-install.sh -o /tmp/amnezia-quick-install.sh"
-  echo "  sudo bash /tmp/amnezia-quick-install.sh"
+  echo "Нет доступа к /dev/tty. Скачайте скрипт и запустите файлом."
   exit 1
 fi
 echo ""
@@ -114,7 +122,6 @@ if [[ -z "${GHCR_KEY}" ]]; then
   exit 1
 fi
 
-# Порт панели на хосте (8080 часто занят старой установкой amnezia-admin и т.п.)
 tcp_port_in_use() {
   local port="$1"
   command -v ss >/dev/null 2>&1 || return 1
@@ -122,7 +129,6 @@ tcp_port_in_use() {
 }
 
 pick_host_port() {
-  # Явный HOST_PORT=… (часто с sudo -E) — не переопределяем.
   if [[ -n "${HOST_PORT:-}" ]]; then
     printf '%s' "${HOST_PORT}"
     return
@@ -132,31 +138,18 @@ pick_host_port() {
     printf '%s' "${want}"
     return
   fi
-  echo "⚠ Порт ${want} уже занят на этом сервере (часто это старая панель или другой контейнер)." >&2
   local alt="8081"
-  if [[ -r /dev/tty ]]; then
-    echo "Введите свободный порт для веб-панели [${alt}]:" >&2
+  echo "⚠ Порт ${want} занят. Введите свободный порт [${alt}]:" >&2
+  IFS= read -r line < /dev/tty || true
+  line="$(trim "${line}")"
+  [[ -z "${line}" ]] && line="${alt}"
+  while tcp_port_in_use "${line}"; do
+    echo "⚠ Порт ${line} тоже занят. Укажите другой:" >&2
     IFS= read -r line < /dev/tty || true
     line="$(trim "${line}")"
-    [[ -z "${line}" ]] && line="${alt}"
-    while tcp_port_in_use "${line}"; do
-      echo "⚠ Порт ${line} тоже занят. Укажите другой:" >&2
-      IFS= read -r line < /dev/tty || true
-      line="$(trim "${line}")"
-      [[ -z "${line}" ]] && {
-        echo "Порт не указан — выход." >&2
-        exit 1
-      }
-    done
-    printf '%s' "${line}"
-    return
-  fi
-  echo "Нет /dev/tty — пробую ${alt}. При необходимости задайте HOST_PORT=… и повторите запуск." >&2
-  if tcp_port_in_use "${alt}"; then
-    echo "И ${alt} занят. Задайте явно: HOST_PORT=9080 curl … | sudo -E bash" >&2
-    exit 1
-  fi
-  printf '%s' "${alt}"
+    [[ -z "${line}" ]] && exit 1
+  done
+  printf '%s' "${line}"
 }
 
 pick_awg_container_name() {
@@ -179,7 +172,6 @@ SELECTED_HOST_PORT="$(pick_host_port)"
 SELECTED_AWG="$(pick_awg_container_name)"
 
 umask 077
-# %q экранирует $ и прочее — безопасно для «source .env» в install.sh
 {
   printf 'GHCR_IMAGE=%q\n' "${DEFAULT_GHCR_IMAGE}"
   printf 'IMAGE_TAG=%q\n' "${IMAGE_TAG}"
@@ -188,6 +180,9 @@ umask 077
   printf 'HOST_PORT=%q\n' "${SELECTED_HOST_PORT}"
   printf 'CONTAINER_NAME=%q\n' "${CONTAINER_NAME:-amnezia-admin-pro}"
   printf 'AWG_CONTAINER=%q\n' "${SELECTED_AWG}"
+  if [[ -n "${ADMIN_PASSWORD:-}" ]]; then
+    printf 'ADMIN_PASSWORD=%q\n' "${ADMIN_PASSWORD}"
+  fi
 } >"${INSTALL_ROOT}/.env"
 
 echo "→ Запуск установки из ${INSTALL_ROOT}"

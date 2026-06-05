@@ -1,136 +1,113 @@
-# Amnezia Admin Pro — установка (Docker / GHCR)
+# Amnezia Web PRO — установка
 
-Скрипты, которые снимают FREE-панель [amnezia_web](https://github.com/andrey271192/amnezia_web) и поднимают PRO-образ с GitHub Container Registry. VPN-контейнеры (**`amnezia-awg`**, **`amnezia-awg2`**) не трогаем.
+Публичный установщик для **Amnezia Web PRO**. По умолчанию ставит панель из открытого GitHub repo:
 
-## Что понадобится на VPS
+- source: [`andrey271192/amnezia_web-PRO_test`](https://github.com/andrey271192/amnezia_web-PRO_test)
+- текущий релиз: `v1.5.2`
+- old GHCR image больше не используется по умолчанию, чтобы у пользователей не было `403 Forbidden`.
 
-- **Docker** и работающий демон.
-- **`docker compose`** v2 (не старый `docker-compose` 1.x — будет `ContainerConfig` / KeyError).
-- **curl**, при первой установке — **git**.
-- **Ключ** с Boosty: GitHub PAT с `read:packages` (не светите в чатах и на скринах).
+## Быстрая установка
 
-`quick-install.sh` сам подтянет Compose v2, если в apt его нет (`scripts/lib-compose-v2.sh`).
-
-## Как выглядит PRO
-
-После установки — та же панель, что в **amnezia_web-PRO**:
-
-<p align="center">
-<img src="docs/screenshots/panel-users-table.png" alt="Панель: пользователи AmneziaWG, инстансы, время, статусы" width="780"/>
-<br/><br/>
-<img src="docs/screenshots/panel-overview-password.png" alt="Панель: заголовок, форма смены пароля" width="780"/>
-</p>
-
-## Одна команда — FREE → PRO (спросит только ключ)
-
-На VPS **от root**:
+На VPS от root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
 ```
 
-Скрипт **перед установкой PRO**:
-
-1. **Убирает FREE-панель** из типового `install.sh` (**amnezia_web**): контейнеры `amnezia-admin`, `amnezia-web-landing`, локальные образы `amnezia-admin:latest` / `amnezia-web-landing:latest`, каталог сборки **`/opt/amnezia-admin`**.  
-2. **Не трогает** контейнеры VPN (**AmneziaWG / AWG**): **`amnezia-awg`**, **`amnezia-awg2`** и т.п.  
-3. Подставляет **`AWG_CONTAINER`** автоматически, если на сервере уже есть `amnezia-awg` или `amnezia-awg2`.  
-4. Клонирует/обновляет **`/opt/amnezia-web-pro-deploy`**, тянет тег из [`PRO_IMAGE_TAG`](PRO_IMAGE_TAG), запрашивает **ключ PAT** (ввод с **`/dev/tty`**).
-
-Перед всем этим, если **`docker compose`** отсутствует, установщик **подтягивает** модуль Compose v2 (см. выше).
-
-Отключить снос FREE (редко нужно): `SKIP_REMOVE_FREE=1 curl … | sudo -E bash`.
-
-Если **нет интерактива** на stdin:
+То же самое с явным первым паролем admin:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh -o /tmp/amnezia-quick-install.sh
-sudo bash /tmp/amnezia-quick-install.sh
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh \
+  | sudo ADMIN_PASSWORD='СЛОЖНЫЙ_ПАРОЛЬ' bash
 ```
 
-**Порт:** если после удаления FREE **8080** всё ещё занят — скрипт предложит другой или задайте `HOST_PORT=8081 curl … | sudo -E bash`.
-
-## Частые проблемы после установки
-
-### `Bind for 0.0.0.0:8080 failed: port is already allocated`
-
-На **8080** уже слушает другой процесс или контейнер (не только снятая FREE-панель). Посмотреть занятость: `ss -tlnp | grep ':8080'`. Обход: переустановка с **`HOST_PORT=8081`** (или свободный порт):
+`quick-install.sh` скачает и запустит рабочий установщик:
 
 ```bash
-HOST_PORT=8081 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
+https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh
 ```
 
-### `KeyError: 'ContainerConfig'` и в трассировке указан **`docker-compose` 1.29.x** (`/usr/lib/python3/...`)
+## Почему больше не GHCR
 
-Старый **Docker Compose v1** из пакета `docker-compose` **непонимает** образы из GHCR с современным OCI-манифестом без поля **`ContainerConfig`**. Нужна **Compose v2** — **`docker compose`**.
+Старый сценарий тянул private image:
 
-На актуальной ветке **`main`** установщики **не дергают legacy `docker-compose` 1.x**, а поднимают Compose v2 через APT (**если пакет виден**) либо **официальный CLI‑плагин с GitHub**.
-
-```bash
-sudo git -C /opt/amnezia-web-pro-deploy fetch origin main
-sudo git -C /opt/amnezia-web-pro-deploy reset --hard origin/main
-curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo bash
+```text
+ghcr.io/andrey271192/amnezia-admin-pro:v1.0.0
 ```
 
-Вручную: **`docker-compose-plugin`** из [репозитория Docker CE](https://docs.docker.com/engine/install/ubuntu/) или шаг из справки в **`scripts/lib-compose-v2.sh`**.
+Если у GitHub PAT нет доступа к package или package закрыт, Docker показывает:
 
-Если после неудачного `up` образовался полубитый контейнер:
-
-```bash
-sudo docker rm -f amnezia-admin-pro 2>/dev/null || true
-sudo bash /opt/amnezia-web-pro-deploy/scripts/install.sh
+```text
+unexpected status ... 403 Forbidden
 ```
 
-Если файл **`.env` удалён или пуст**, снова запустите **`quick-install.sh`** — он заново попросит PAT.
+Это не ошибка VPS и не ошибка Docker. Это отказ GitHub Container Registry. Чтобы не ловить эту ошибку у подписчиков, обычная установка теперь идёт из GitHub source.
 
-### `Unable to locate package docker-compose-plugin` (Ubuntu без репозитория Docker)
+Предупреждение Docker:
 
-Пакет поставляет официальный репозиторий Docker CE на Ubuntu/Debian. Если его подключать не хотите или `apt-get` всё равно пишет, что пакета нет:
-
-1. Просто снова запустите обновлённый **`quick-install.sh`** после `git pull` репозитория установки — он попытается **скачать плагин Compose v2 напрямую** с GitHub (нужны `curl` и исходящий HTTPS до `github.com`).
-
-Либо отдельно:
-
-```bash
-sudo curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/scripts/lib-compose-v2.sh -o /tmp/lib-compose-v2.sh
-sudo bash -c 'source /tmp/lib-compose-v2.sh && ensure_compose_v2'
-sudo rm -f /tmp/lib-compose-v2.sh
-docker compose version
+```text
+WARNING! Your credentials are stored unencrypted in '/root/.docker/config.json'
 ```
 
-## Ручной способ (git + .env)
+не является причиной ошибки. Это только предупреждение Docker.
+
+## Legacy GHCR mode
+
+Оставлен только для ручного использования, если у вас реально есть доступ к package:
 
 ```bash
-git clone https://github.com/andrey271192/amnezia-web-pro-deploy.git
-cd amnezia-web-pro-deploy
-cp .env.example .env
-# заполните GHCR_* из закрытого поста Boosty
-sudo bash scripts/install.sh
+USE_GHCR=1 curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main/quick-install.sh | sudo -E bash
+```
+
+или:
+
+```bash
+USE_GHCR=1 sudo -E bash scripts/install.sh
+```
+
+Нужны:
+
+- GitHub PAT с `read:packages`;
+- доступ к package `ghcr.io/andrey271192/amnezia-admin-pro`;
+- существующий tag из `PRO_IMAGE_TAG`.
+
+## Удаление
+
+Обычная остановка панели:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh | sudo bash
+```
+
+Полная очистка с данными:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/uninstall.sh \
+  | sudo REMOVE_DATA=1 REMOVE_DIR=1 bash
 ```
 
 ## Обновление
 
-После объявления нового тега образа обновите `IMAGE_TAG` в `.env` и выполните:
+В панели: **Настройки → О программе и обновления → Проверить обновления**.
+
+Доступно:
+
+- release channel;
+- beta channel;
+- выбор версии;
+- rollback на старый tag.
+
+Ручное обновление source-установки:
 
 ```bash
-sudo bash scripts/update.sh
+cd /opt/amnezia-web-pro
+git pull
+docker compose build
+docker compose up -d
 ```
-
-## Шаблон поста для Boosty
-
-См. [docs/BOOSTY_SUBSCRIBERS_POST.md](docs/BOOSTY_SUBSCRIBERS_POST.md).
-
-## Безопасность
-
-- Файл `.env` с токеном не должен попадать в issue, чаты и скриншоты.
-- При утечке токена автор перевыпускает его в GitHub; подписчикам выдаётся новый токен в обновлённом посте.
-
----
 
 ## Поддержка проекта
 
----
-
-- ⭐ **GitHub:** [andrey271192/amnezia-web-pro-deploy](https://github.com/andrey271192/amnezia-web-pro-deploy)
-- 💖 **Boosty:** [boosty.to/andrey27/donate](https://boosty.to/andrey27/donate)
-- 💳 **Ozon Bank (СБП):** [ссылка](https://finance.ozon.ru/apps/sbp/ozonbankpay/019dc200-2a5d-7931-a619-782d285f6798)
-- ✉️ **Telegram:** [@lot_andrey](https://t.me/lot_andrey)
+- GitHub: [andrey271192/amnezia_web-PRO_test](https://github.com/andrey271192/amnezia_web-PRO_test)
+- Boosty: [boosty.to/andrey27/donate](https://boosty.to/andrey27/donate)
+- Telegram: [@lot_andrey](https://t.me/lot_andrey)
