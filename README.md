@@ -228,4 +228,4 @@ docker compose up -d
 
 - GitHub: [andrey271192/amnezia_web-PRO_test](https://github.com/andrey271192/amnezia_web-PRO_test)
 - Boosty: [boosty.to/andrey27/donate](https://boosty.to/andrey27/donate)
-- Telegram: [@lot_andrey](https://t.me/lot_andrey)
+- Telegram: [@PCAdministration](https://t.me/PCAdministration)
