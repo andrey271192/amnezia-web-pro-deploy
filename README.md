@@ -1,25 +1,25 @@
 # Amnezia Web PRO Deploy
 
-Приватный установщик **Amnezia Web PRO** на VPS. Доступ к репозиториям выдаётся подписчикам Boosty.
+Приватный установщик **Amnezia Web PRO** на VPS. Доступ выдаётся подписчикам Boosty через private GitHub repo.
 
-По умолчанию установка идёт из private source repo:
+Основной сценарий:
 
-- source: `andrey271192/amnezia_web-PRO_test`;
+- источник: `andrey271192/amnezia_web-PRO_test`;
 - текущий релиз: `v1.5.2`;
-- old GHCR image больше не используется по умолчанию;
-- legacy GHCR mode оставлен только вручную через `USE_GHCR=1`.
-- нужен `GITHUB_TOKEN` с доступом к private repo.
+- нужен `GITHUB_TOKEN` с доступом к private repo;
+- GHCR больше не используется для обычной установки;
+- старый GHCR-режим оставлен только вручную через `USE_GHCR=1`.
 
 ## Что делает установщик
 
-- скачивает актуальный `install.sh` из `amnezia_web-PRO_test`;
+- скачивает актуальный `install.sh` из private repo;
 - ставит Docker, если его нет;
 - разворачивает панель в `/opt/amnezia-web-pro`;
 - создаёт `.env`;
 - собирает и запускает Docker Compose stack;
 - поддерживает явный первый пароль admin через `ADMIN_PASSWORD`;
 - не требует GHCR PAT для обычной установки;
-- требует GitHub token для доступа к private source.
+- требует GitHub token для доступа к private repo.
 
 ## Быстрая установка
 
@@ -42,13 +42,13 @@ curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   | sudo -E bash
 ```
 
-`quick-install.sh` скачает и запустит рабочий установщик:
+`quick-install.sh` скачает и запустит основной установщик:
 
 ```bash
 https://raw.githubusercontent.com/andrey271192/amnezia_web-PRO_test/main/install.sh
 ```
 
-Если `GITHUB_TOKEN` не передан, private GitHub вернёт `404` или `403`. Это нормально: repo закрыт.
+Если `GITHUB_TOKEN` не передан, GitHub вернёт `404` или `403`. Это нормально: repo закрыт.
 
 ## Почему больше не GHCR
 
@@ -64,7 +64,7 @@ ghcr.io/andrey271192/amnezia-admin-pro:v1.0.0
 unexpected status ... 403 Forbidden
 ```
 
-Это не ошибка VPS и не ошибка Docker. Это отказ GitHub Container Registry. Чтобы не ловить эту ошибку у подписчиков, обычная установка теперь идёт из private GitHub source.
+Это не ошибка VPS и не ошибка Docker. Это отказ GitHub Container Registry. Чтобы не ловить эту ошибку у подписчиков, обычная установка теперь идёт из private GitHub repo.
 
 Предупреждение Docker:
 
@@ -76,7 +76,7 @@ WARNING! Your credentials are stored unencrypted in '/root/.docker/config.json'
 
 ## Legacy GHCR mode
 
-Оставлен только для ручного использования, если у вас реально есть доступ к package:
+Оставлен только для ручного использования, если есть доступ к package:
 
 ```bash
 export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
@@ -103,7 +103,7 @@ USE_GHCR=1 sudo -E bash scripts/install.sh
 
 Причина: старый GHCR-сценарий пытается скачать private image, а у token нет доступа к package.
 
-Решение: используйте обычную private source установку без GHCR:
+Решение: используйте обычную установку без GHCR:
 
 ```bash
 export GITHUB_TOKEN='ТОКЕН_ИЗ_BOOSTY'
@@ -138,7 +138,7 @@ docker info
 
 ### `docker compose` не найден
 
-Обычный source installer сам ставит Docker Compose plugin. Если запускаете legacy GHCR mode вручную, обновите Docker/Compose:
+Обычный установщик сам ставит Docker Compose plugin. Если запускаете legacy GHCR mode вручную, обновите Docker/Compose:
 
 ```bash
 sudo apt-get update
@@ -210,10 +210,10 @@ curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
 
 Доступно:
 
-- release channel;
-- beta channel;
+- стабильный канал;
+- beta-канал;
 - выбор версии;
-- rollback на старый tag.
+- откат на старый tag.
 
 Ручное обновление source-установки:
 

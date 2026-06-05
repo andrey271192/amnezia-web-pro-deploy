@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# One-command installer kept for subscriber links. Default path installs from
-# the private source repo using GITHUB_TOKEN, not the legacy GHCR image.
+# Установщик для подписчиков. Основной путь ставит из private GitHub repo
+# через GITHUB_TOKEN, без legacy GHCR image.
 set -euo pipefail
 
 RAW_BASE="${RAW_BASE:-https://raw.githubusercontent.com/andrey271192/amnezia-web-pro-deploy/main}"
