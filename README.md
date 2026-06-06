@@ -1,6 +1,21 @@
 # Amnezia Web PRO Deploy
 
-Приватный установщик **Amnezia Web PRO** на VPS. Доступ выдаётся подписчикам Boosty через private GitHub repo.
+Legacy transitional repo для **Amnezia Web PRO**.
+
+Канонический продукт и установщик сейчас живут в private repo:
+
+```text
+andrey271192/amnezia_web-PRO_test
+```
+
+Этот repo оставлен только как redirect/совместимость для старых ссылок из Boosty, README и ранних инструкций. Для новых установок используйте `install.sh` напрямую из `amnezia_web-PRO_test`.
+
+Решение по будущему:
+
+- не удалять сразу, пока старые публичные ссылки могут быть у подписчиков;
+- оставить README/quick-install как redirect на private source install;
+- после полной миграции Boosty-постов и документации можно архивировать repo на GitHub;
+- удаление repo не нужно, если нет причины ломать старые инструкции.
 
 Основной сценарий:
 
